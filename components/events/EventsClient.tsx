@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, memo } from "react";
 import {
   INDIAN_REGIONS,
   MONTHS,
@@ -9,13 +9,15 @@ import {
   type EventsRequest,
   type EventsResponse,
 } from "@/lib/types";
+import { MESSAGES } from "@/lib/messages";
+import { API_HEADERS } from "@/lib/api-utils";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { MetaLine } from "@/components/MetaLine";
 import { SaveButton } from "@/components/SaveButton";
 import { readApiError } from "@/components/api";
 
-export function EventsClient() {
+export const EventsClient = memo(function EventsClientComponent() {
   const [month, setMonth] = useState("");
   const [region, setRegion] = useState("");
   const [monthError, setMonthError] = useState<string | null>(null);
@@ -172,4 +174,4 @@ export function EventsClient() {
       </div>
     </div>
   );
-}
+});

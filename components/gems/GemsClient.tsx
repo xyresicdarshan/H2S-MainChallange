@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, memo } from "react";
 import Link from "next/link";
 import {
   INDIAN_REGIONS,
@@ -10,13 +10,15 @@ import {
   type HiddenGemsRequest,
   type HiddenGemsResponse,
 } from "@/lib/types";
+import { MESSAGES } from "@/lib/messages";
+import { API_HEADERS } from "@/lib/api-utils";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { MetaLine } from "@/components/MetaLine";
 import { SaveButton } from "@/components/SaveButton";
 import { readApiError } from "@/components/api";
 
-export function GemsClient() {
+export const GemsClient = memo(function GemsClientComponent() {
   const [state, setState] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [stateError, setStateError] = useState<string | null>(null);
@@ -197,4 +199,4 @@ export function GemsClient() {
       </div>
     </div>
   );
-}
+});

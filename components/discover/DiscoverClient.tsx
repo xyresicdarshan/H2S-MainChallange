@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent, memo } from "react";
 import Link from "next/link";
 import {
   INDIAN_REGIONS,
@@ -12,13 +12,15 @@ import {
   type RecommendationsRequest,
   type RecommendationsResponse,
 } from "@/lib/types";
+import { INTEREST_LIMITS, MESSAGES } from "@/lib/messages";
+import { API_HEADERS } from "@/lib/api-utils";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { MetaLine } from "@/components/MetaLine";
 import { SaveButton } from "@/components/SaveButton";
 import { readApiError } from "@/components/api";
 
-export function DiscoverClient({
+export const DiscoverClientMemo = memo(function DiscoverClient({
   initialPreferences,
 }: {
   initialPreferences: PreferencesPayload | null;
@@ -39,14 +41,7 @@ export function DiscoverClient({
   const [prefError, setPrefError] = useState<string | null>(null);
   const [prefSuccess, setPrefSuccess] = useState<string | null>(null);
 
-  function toggleInterest(value: string) {
-    setInterestError(null);
-    setInterests((prev) =>
-      prev.includes(value) ? prev.filter((i) => i !== value) : [...prev, value],
-    );
-  }
-
-  const toggleInterestCallback = useCallback((value: string) => {
+  const toggleInterestMemo = useCallback((value: string) => {
     setInterestError(null);
     setInterests((prev) =>
       prev.includes(value) ? prev.filter((i) => i !== value) : [...prev, value],
@@ -54,49 +49,16 @@ export function DiscoverClient({
   }, []);
 
   function validateInterests(): boolean {
-    if (interests.length < 1) {
-      setInterestError("Choose at least one interest.");
+    if (interests.length < INTEREST_LIMITS.MIN) {
+      setInterestError(MESSAGES.INTERESTS_MIN);
       return false;
     }
-    if (interests.length > 5) {
-      setInterestError("Choose at most five interests.");
+    if (interests.length > INTEREST_LIMITS.MAX) {
+      setInterestError(MESSAGES.INTERESTS_MAX);
       return false;
     }
     setInterestError(null);
     return true;
-  }
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!validateInterests()) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const body: RecommendationsRequest = {
-        interests,
-        ...(region ? { region } : {}),
-        ...(travelStyle ? { travelStyle } : {}),
-      };
-      const res = await fetch("/api/ai/recommendations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        setError(await readApiError(res, `Generation failed (HTTP ${res.status}).`));
-        setResults(null);
-        setMeta(null);
-        return;
-      }
-      const data = (await res.json()) as RecommendationsResponse;
-      setResults(data.recommendations);
-      setMeta(data.meta);
-    } catch {
-      setError("Network error — the request did not reach the server.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   const handleSubmit = useCallback(
@@ -114,11 +76,13 @@ export function DiscoverClient({
         };
         const res = await fetch("/api/ai/recommendations", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: API_HEADERS.JSON,
           body: JSON.stringify(body),
         });
         if (!res.ok) {
-          setError(await readApiError(res, `Generation failed (HTTP ${res.status}).`));
+          setError(
+            await readApiError(res, MESSAGES.AI_GENERATION_FAILED(res.status)),
+          );
           setResults(null);
           setMeta(null);
           return;
@@ -127,41 +91,13 @@ export function DiscoverClient({
         setResults(data.recommendations);
         setMeta(data.meta);
       } catch {
-        setError("Network error — the request did not reach the server.");
+        setError(MESSAGES.NETWORK_ERROR);
       } finally {
         setLoading(false);
       }
     },
     [interests, region, travelStyle],
   );
-
-  async function savePreferences() {
-    if (!validateInterests()) return;
-    setPrefSaving(true);
-    setPrefError(null);
-    setPrefSuccess(null);
-    try {
-      const body: PreferencesPayload = {
-        interests,
-        homeRegion: region || null,
-        travelStyle: travelStyle || null,
-      };
-      const res = await fetch("/api/preferences", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        setPrefError(await readApiError(res, `Could not save preferences (HTTP ${res.status}).`));
-        return;
-      }
-      setPrefSuccess("Interests saved to your profile.");
-    } catch {
-      setPrefError("Network error — preferences were not saved.");
-    } finally {
-      setPrefSaving(false);
-    }
-  }
 
   const handleSavePreferences = useCallback(async () => {
     if (!validateInterests()) return;
@@ -176,16 +112,18 @@ export function DiscoverClient({
       };
       const res = await fetch("/api/preferences", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: API_HEADERS.JSON,
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        setPrefError(await readApiError(res, `Could not save preferences (HTTP ${res.status}).`));
+        setPrefError(
+          await readApiError(res, MESSAGES.PREFERENCES_SAVE_FAILED(res.status)),
+        );
         return;
       }
-      setPrefSuccess("Interests saved to your profile.");
+      setPrefSuccess(MESSAGES.PREFERENCES_SAVED);
     } catch {
-      setPrefError("Network error — preferences were not saved.");
+      setPrefError(MESSAGES.NETWORK_ERROR_PREF);
     } finally {
       setPrefSaving(false);
     }
@@ -199,7 +137,7 @@ export function DiscoverClient({
         <fieldset aria-describedby={interestError ? "interests-error interests-hint" : "interests-hint"}>
           <legend className="text-sm font-medium">Your interests</legend>
           <p id="interests-hint" className="mt-1 text-xs text-ink/70">
-            Choose one to five.
+            {MESSAGES.INTERESTS_HINT}
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {INTEREST_OPTIONS.map((option, index) => {
@@ -211,7 +149,7 @@ export function DiscoverClient({
                     type="checkbox"
                     checked={checked}
                     disabled={!checked && atMax}
-                    onChange={() => toggleInterestCallback(option)}
+                    onChange={() => toggleInterestMemo(option)}
                     aria-invalid={interestError ? true : undefined}
                     className="h-4 w-4 accent-maroon"
                   />
@@ -250,7 +188,7 @@ export function DiscoverClient({
           </div>
           <div>
             <label htmlFor="discover-travel-style" className="block text-sm font-medium">
-              Travel style <span className="font-normal text-ink/70">(optional)</span>
+              Travel style <span className="font-normal text-ink/70">{MESSAGES.TRAVEL_STYLE_OPTIONAL}</span>
             </label>
             <select
               id="discover-travel-style"
@@ -353,4 +291,6 @@ export function DiscoverClient({
       </div>
     </div>
   );
-}
+});
+
+export const DiscoverClient = DiscoverClientMemo;

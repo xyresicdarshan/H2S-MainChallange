@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Link from "next/link";
 import type { SavedItemRecord, SavedItemType } from "@/lib/types";
+import { MESSAGES } from "@/lib/messages";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { readApiError } from "@/components/api";
 
@@ -61,7 +62,11 @@ function PayloadDetails({ item }: { item: SavedItemRecord }) {
   );
 }
 
-export function SavedList({ initialItems }: { initialItems: SavedItemRecord[] }) {
+export const SavedList = memo(function SavedListComponent({
+  initialItems,
+}: {
+  initialItems: SavedItemRecord[];
+}) {
   const [items, setItems] = useState(initialItems);
   const [announcement, setAnnouncement] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -144,4 +149,4 @@ export function SavedList({ initialItems }: { initialItems: SavedItemRecord[] })
       )}
     </div>
   );
-}
+});
