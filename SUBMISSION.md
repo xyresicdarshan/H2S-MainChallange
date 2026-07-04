@@ -1,14 +1,12 @@
 # Competition Submission — Virasat
 
-> **Fill in the two ALL-CAPS placeholders (live URL + repo visibility check) before submitting.**
-
 ## 1. Public GitHub repository
 
-https://github.com/xyresicdarshan/H2S-MainChallange — make sure the repo is set to **Public** in Settings before submitting.
+https://github.com/xyresicdarshan/H2S-MainChallange (make sure the repo is set to **Public** in Settings before submitting)
 
 ## 2. Deployed version vs. development
 
-**Live URL:** `https://YOUR-DEPLOYMENT.vercel.app` ← replace after the Vercel import (steps in README → "Deploying to Vercel").
+**Live URL:** https://virasat-xyresic-darshan.vercel.app
 
 The deployed version is identical to `main` — the same code path runs locally and in production. The only environment differences:
 
