@@ -1,0 +1,50 @@
+{
+  "name": "virasat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Virasat — GenAI-powered discovery platform for Indian cultural experiences, heritage sites, hidden gems, and festivals.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "drizzle-orm": "^0.44.2",
+    "jose": "^6.0.11",
+    "next": "^15.3.4",
+    "postgres": "^3.4.7",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "dotenv": "^16.5.0",
+    "drizzle-kit": "^0.31.1",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "^15.3.4",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.8",
+    "@tailwindcss/postcss": "^4.1.8",
+    "postcss": "^8.5.4",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.2"
+  }
+}

@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ivory: #faf6ef;
+  --color-parchment: #f3ecdf;
+  --color-ink: #292018;
+  --color-maroon: #7c2333;
+  --color-maroon-deep: #5c1a26;
+  /* #a34a08 (not #b45309) — passes AA 4.5:1 as text on parchment/ivory/white. */
+  --color-saffron: #a34a08;
+  --color-saffron-bright: #d97706;
+  --color-leaf: #3f6212;
+}
+
+/* `inline` keeps the var() reference so these tokens resolve to the
+   next/font CSS variables set on <html> at runtime. */
+@theme inline {
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+@layer base {
+  body {
+    @apply bg-ivory font-body text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+
+  /* Guaranteed visible keyboard focus everywhere; buttons layer a ring on top.
+     Uses --color-saffron (not -bright): 4.66:1 on ivory, above the 3:1
+     non-text contrast minimum (WCAG 1.4.11). */
+  :focus-visible {
+    outline: 2px solid var(--color-saffron);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-maroon px-5 py-2.5 text-sm font-medium text-ivory transition-colors hover:bg-maroon-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-ivory disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-maroon/40 px-5 py-2.5 text-sm font-medium text-maroon transition-colors hover:bg-parchment focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-ivory disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .field-input {
+    @apply w-full rounded-xl border border-ink/20 bg-white px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-saffron;
+  }
+
+  .card {
+    @apply rounded-2xl border border-ink/10 bg-white p-6 shadow-sm;
+  }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
