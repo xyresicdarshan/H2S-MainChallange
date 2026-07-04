@@ -6,7 +6,7 @@ export async function POST() {
     await clearSessionCookie();
     return Response.json({ ok: true });
   } catch (err) {
-    console.error("POST /api/auth/logout failed:", err);
+    logError("POST /api/auth/logout", "failed", err);
     return jsonError(500, "Something went wrong.", "INTERNAL");
   }
 }

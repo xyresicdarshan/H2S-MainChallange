@@ -1,15 +1,15 @@
-import { streamText, AiError } from "@/lib/ai/client";
+import { streamText } from "@/lib/ai/client";
 import { logAiInteraction } from "@/lib/ai/log";
 import { buildStoryPrompt, STORY_SYSTEM } from "@/lib/ai/prompts";
 import { storyRequestSchema } from "@/lib/ai/schemas";
-import { HttpError, jsonError, parseBody } from "@/lib/api/helpers";
+import { jsonError, parseBody, withErrorHandling } from "@/lib/api/helpers";
 import { getSessionUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
-export async function POST(req: Request): Promise<Response> {
-  try {
+export function POST(req: Request): Promise<Response> {
+  return withErrorHandling("/api/ai/story", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -33,7 +33,8 @@ export async function POST(req: Request): Promise<Response> {
 
     // latencyMs here is a time-to-first-byte proxy (stream creation): the
     // full generation duration is unknowable before piping to the client.
-    await logAiInteraction({
+    // Best-effort audit log — fire-and-forget so it never delays the stream.
+    void logAiInteraction({
       userId: user.id,
       feature: "story",
       model,
@@ -48,10 +49,5 @@ export async function POST(req: Request): Promise<Response> {
         "Cache-Control": "no-store",
       },
     });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    if (err instanceof AiError) return jsonError(err.status, err.message, err.code);
-    console.error("[/api/ai/story]", err);
-    return jsonError(500, "Something went wrong on our side. Please try again.", "INTERNAL");
-  }
+  });
 }

@@ -160,4 +160,46 @@ describe("POST /api/auth/login", () => {
     expect(body.user).toEqual({ id: "user-1", email: "asha@example.com", name: "Asha Rao" });
     expect(vi.mocked(setSessionCookie)).toHaveBeenCalledWith(body.user);
   });
+
+  it("returns 400 for missing required fields", async () => {
+    const res = await loginPost(
+      jsonRequest("http://test/api/auth/login", {
+        email: "asha@example.com",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 for empty password", async () => {
+    const res = await loginPost(
+      jsonRequest("http://test/api/auth/login", {
+        email: "asha@example.com",
+        password: "",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/auth/register - Additional Edge Cases", () => {
+  it("returns 400 for missing name field", async () => {
+    const res = await registerPost(
+      jsonRequest("http://test/api/auth/register", {
+        email: "asha@example.com",
+        password: "sunrise42",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 for password without number", async () => {
+    const res = await registerPost(
+      jsonRequest("http://test/api/auth/register", {
+        name: "Asha Rao",
+        email: "asha@example.com",
+        password: "OnlyLetters",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
 });

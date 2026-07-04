@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { aiInteractions } from "@/lib/db/schema";
+import { logError } from "@/lib/logger";
 
 /**
  * Records one real Gemini call in the ai_interactions audit table.
@@ -18,6 +19,6 @@ export async function logAiInteraction(entry: {
   try {
     await getDb().insert(aiInteractions).values(entry);
   } catch (err) {
-    console.error("[ai-log] failed to record interaction:", err);
+    logError("ai-interaction", "failed to record interaction", err);
   }
 }

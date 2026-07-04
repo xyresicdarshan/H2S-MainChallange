@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { AiError } from "@/lib/ai/client";
+import { logError } from "@/lib/logger";
 
 /** Error carrying an HTTP status + machine-readable code; route handlers map it to jsonError. */
 export class HttpError extends Error {
@@ -15,6 +17,25 @@ export class HttpError extends Error {
 /** Standard JSON error envelope: { error, code? } with an accurate status. */
 export function jsonError(status: number, error: string, code?: string): Response {
   return Response.json({ error, ...(code !== undefined ? { code } : {}) }, { status });
+}
+
+/**
+ * Runs a route handler under one shared error-mapping policy, so every route
+ * maps HttpError/AiError to their carried status and everything else to an
+ * honest, logged 500 — instead of repeating that catch block per file.
+ */
+export async function withErrorHandling(
+  routeLabel: string,
+  handler: () => Promise<Response>,
+): Promise<Response> {
+  try {
+    return await handler();
+  } catch (err) {
+    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
+    if (err instanceof AiError) return jsonError(err.status, err.message, err.code);
+    logError(routeLabel, "unhandled error", err);
+    return jsonError(500, "Something went wrong. Please try again.", "INTERNAL");
+  }
 }
 
 /**

@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm";
-import { HttpError, jsonError, parseBody } from "@/lib/api/helpers";
+import { jsonError, parseBody, withErrorHandling } from "@/lib/api/helpers";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { preferences } from "@/lib/db/schema";
 import type { PreferencesPayload } from "@/lib/types";
 import { preferencesSchema } from "@/lib/validation/preferences";
 
-export async function GET() {
-  try {
+export function GET(): Promise<Response> {
+  return withErrorHandling("GET /api/preferences", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -23,15 +23,11 @@ export async function GET() {
       : null;
 
     return Response.json({ preferences: payload });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    console.error("GET /api/preferences failed:", err);
-    return jsonError(500, "Something went wrong.", "INTERNAL");
-  }
+  });
 }
 
-export async function PUT(req: Request) {
-  try {
+export function PUT(req: Request): Promise<Response> {
+  return withErrorHandling("PUT /api/preferences", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -57,9 +53,5 @@ export async function PUT(req: Request) {
       travelStyle: row.travelStyle,
     };
     return Response.json({ preferences: payload });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    console.error("PUT /api/preferences failed:", err);
-    return jsonError(500, "Something went wrong.", "INTERNAL");
-  }
+  });
 }

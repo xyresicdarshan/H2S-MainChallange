@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import { HttpError, jsonError, parseBody } from "@/lib/api/helpers";
+import { jsonError, parseBody, withErrorHandling } from "@/lib/api/helpers";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { savedItems } from "@/lib/db/schema";
@@ -18,8 +18,8 @@ function toRecord(row: typeof savedItems.$inferSelect): SavedItemRecord {
   };
 }
 
-export async function GET() {
-  try {
+export function GET(): Promise<Response> {
+  return withErrorHandling("GET /api/saved", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -31,15 +31,11 @@ export async function GET() {
       .orderBy(desc(savedItems.createdAt));
 
     return Response.json({ items: rows.map(toRecord) });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    console.error("GET /api/saved failed:", err);
-    return jsonError(500, "Something went wrong.", "INTERNAL");
-  }
+  });
 }
 
-export async function POST(req: Request) {
-  try {
+export function POST(req: Request): Promise<Response> {
+  return withErrorHandling("POST /api/saved", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -52,9 +48,5 @@ export async function POST(req: Request) {
       .returning();
 
     return Response.json({ item: toRecord(row) }, { status: 201 });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    console.error("POST /api/saved failed:", err);
-    return jsonError(500, "Something went wrong.", "INTERNAL");
-  }
+  });
 }

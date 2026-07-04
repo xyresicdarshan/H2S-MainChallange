@@ -1,17 +1,17 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { HttpError, jsonError } from "@/lib/api/helpers";
+import { jsonError, withErrorHandling } from "@/lib/api/helpers";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { savedItems } from "@/lib/db/schema";
 
 const idSchema = z.string().uuid();
 
-export async function DELETE(
+export function DELETE(
   _req: Request,
   context: { params: Promise<{ id: string }> },
-) {
-  try {
+): Promise<Response> {
+  return withErrorHandling("DELETE /api/saved/[id]", async () => {
     const user = await getSessionUser();
     if (!user) return jsonError(401, "Authentication required.", "UNAUTHENTICATED");
 
@@ -29,9 +29,5 @@ export async function DELETE(
 
     if (deleted.length === 0) return jsonError(404, "Saved item not found.", "NOT_FOUND");
     return Response.json({ ok: true });
-  } catch (err) {
-    if (err instanceof HttpError) return jsonError(err.status, err.message, err.code);
-    console.error("DELETE /api/saved/[id] failed:", err);
-    return jsonError(500, "Something went wrong.", "INTERNAL");
-  }
+  });
 }

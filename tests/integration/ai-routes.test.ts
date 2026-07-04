@@ -186,5 +186,24 @@ for (const c of cases) {
       const body = (await res.json()) as { error: string; code?: string };
       expect(body.code).toBe("AI_INVALID_SHAPE");
     });
+
+    it("calls logAiInteraction with correct metadata on successful response", async () => {
+      vi.mocked(generateJson).mockResolvedValue({
+        data: c.aiData,
+        model: "gemini-2.0",
+        latencyMs: 500,
+      });
+
+      const res = await c.post(jsonRequest(c.url, c.validBody));
+      expect(res.status).toBe(200);
+
+      // Verify logAiInteraction was called with the correct metadata
+      expect(vi.mocked(logAiInteraction)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latencyMs: 500,
+          model: "gemini-2.0",
+        }),
+      );
+    });
   });
 }

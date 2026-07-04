@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   INDIAN_REGIONS,
@@ -45,6 +45,13 @@ export function DiscoverClient({
       prev.includes(value) ? prev.filter((i) => i !== value) : [...prev, value],
     );
   }
+
+  const toggleInterestCallback = useCallback((value: string) => {
+    setInterestError(null);
+    setInterests((prev) =>
+      prev.includes(value) ? prev.filter((i) => i !== value) : [...prev, value],
+    );
+  }, []);
 
   function validateInterests(): boolean {
     if (interests.length < 1) {
@@ -92,6 +99,42 @@ export function DiscoverClient({
     }
   }
 
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!validateInterests()) return;
+
+      setLoading(true);
+      setError(null);
+      try {
+        const body: RecommendationsRequest = {
+          interests,
+          ...(region ? { region } : {}),
+          ...(travelStyle ? { travelStyle } : {}),
+        };
+        const res = await fetch("/api/ai/recommendations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          setError(await readApiError(res, `Generation failed (HTTP ${res.status}).`));
+          setResults(null);
+          setMeta(null);
+          return;
+        }
+        const data = (await res.json()) as RecommendationsResponse;
+        setResults(data.recommendations);
+        setMeta(data.meta);
+      } catch {
+        setError("Network error — the request did not reach the server.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [interests, region, travelStyle],
+  );
+
   async function savePreferences() {
     if (!validateInterests()) return;
     setPrefSaving(true);
@@ -120,11 +163,39 @@ export function DiscoverClient({
     }
   }
 
+  const handleSavePreferences = useCallback(async () => {
+    if (!validateInterests()) return;
+    setPrefSaving(true);
+    setPrefError(null);
+    setPrefSuccess(null);
+    try {
+      const body: PreferencesPayload = {
+        interests,
+        homeRegion: region || null,
+        travelStyle: travelStyle || null,
+      };
+      const res = await fetch("/api/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        setPrefError(await readApiError(res, `Could not save preferences (HTTP ${res.status}).`));
+        return;
+      }
+      setPrefSuccess("Interests saved to your profile.");
+    } catch {
+      setPrefError("Network error — preferences were not saved.");
+    } finally {
+      setPrefSaving(false);
+    }
+  }, [interests, region, travelStyle]);
+
   const atMax = interests.length >= 5;
 
   return (
     <div>
-      <form onSubmit={onSubmit} noValidate className="card space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="card space-y-6">
         <fieldset aria-describedby={interestError ? "interests-error interests-hint" : "interests-hint"}>
           <legend className="text-sm font-medium">Your interests</legend>
           <p id="interests-hint" className="mt-1 text-xs text-ink/70">
@@ -140,7 +211,7 @@ export function DiscoverClient({
                     type="checkbox"
                     checked={checked}
                     disabled={!checked && atMax}
-                    onChange={() => toggleInterest(option)}
+                    onChange={() => toggleInterestCallback(option)}
                     aria-invalid={interestError ? true : undefined}
                     className="h-4 w-4 accent-maroon"
                   />
@@ -203,7 +274,7 @@ export function DiscoverClient({
           </button>
           <button
             type="button"
-            onClick={savePreferences}
+            onClick={handleSavePreferences}
             disabled={prefSaving}
             className="btn-secondary"
           >
