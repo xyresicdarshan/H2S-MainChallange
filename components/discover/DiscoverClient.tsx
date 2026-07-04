@@ -48,7 +48,7 @@ export const DiscoverClientMemo = memo(function DiscoverClient({
     );
   }, []);
 
-  function validateInterests(): boolean {
+  const validateInterests = useCallback((): boolean => {
     if (interests.length < INTEREST_LIMITS.MIN) {
       setInterestError(MESSAGES.INTERESTS_MIN);
       return false;
@@ -59,7 +59,7 @@ export const DiscoverClientMemo = memo(function DiscoverClient({
     }
     setInterestError(null);
     return true;
-  }
+  }, [interests]);
 
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -96,7 +96,7 @@ export const DiscoverClientMemo = memo(function DiscoverClient({
         setLoading(false);
       }
     },
-    [interests, region, travelStyle],
+    [interests, region, travelStyle, validateInterests],
   );
 
   const handleSavePreferences = useCallback(async () => {
@@ -127,7 +127,7 @@ export const DiscoverClientMemo = memo(function DiscoverClient({
     } finally {
       setPrefSaving(false);
     }
-  }, [interests, region, travelStyle]);
+  }, [interests, region, travelStyle, validateInterests]);
 
   const atMax = interests.length >= 5;
 

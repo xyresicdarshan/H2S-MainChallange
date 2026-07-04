@@ -9,8 +9,6 @@ import {
   type EventsRequest,
   type EventsResponse,
 } from "@/lib/types";
-import { MESSAGES } from "@/lib/messages";
-import { API_HEADERS } from "@/lib/api-utils";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { MetaLine } from "@/components/MetaLine";

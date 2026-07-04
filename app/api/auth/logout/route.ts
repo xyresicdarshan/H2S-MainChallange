@@ -1,5 +1,6 @@
 import { jsonError } from "@/lib/api/helpers";
 import { clearSessionCookie } from "@/lib/auth/session";
+import { logError } from "@/lib/logger";
 
 export async function POST() {
   try {
